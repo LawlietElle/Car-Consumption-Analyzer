@@ -6,11 +6,17 @@ import numpy as np
 import pandas as pd
 
 
-class Obd2Analysis():
+class Obd2Analyzer:
     def __init__(self, csvfile):
         self.csvfile = csvfile
         self.used_trip_distance = list()
         self.consumo_medio_ist = self.evaluateConsumoMedioIst()
+
+    def __lt__(self, other) -> bool:
+        return self.consumo_medio_ist[-1] < other.consumo_medio_ist[-1]
+
+    def __str__(self):
+        return str(self.consumo_medio_ist[-1])
 
     def getData(self, csvfile):
         consumi_ist = list()
@@ -43,15 +49,15 @@ class Obd2Analysis():
         pulisciUpper(my_list)
         pulisciLower(my_list)
 
-        yIniz = np.array(my_list)
-        x = np.arange(len(yIniz))
-        idx = np.nonzero(yIniz)
-        interp = interp1d(x[idx], yIniz[idx])
-        yFixed = interp(x)
+        y_iniz = np.array(my_list)
+        x = np.arange(len(y_iniz))
+        idx = np.nonzero(y_iniz)
+        interp = interp1d(x[idx], y_iniz[idx])
+        y_fixed = interp(x)
 
-        return yFixed
+        return y_fixed
 
-    def evaluateConsumoMedioIst(self):
+    def evaluateConsumoMedioIst(self) -> list:
         consumi_ist, trip_distance = self.getData(self.csvfile)
         ripartizione = list()
         litri_ist = list()
