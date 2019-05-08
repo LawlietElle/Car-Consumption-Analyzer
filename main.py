@@ -31,14 +31,13 @@ def mergeSort(my_list):
             j = j + 1
             k = k + 1
 
-# ... riempire groups da file, a manina, o come cazzo te pare
 
-
-# esempio
-groups = {1: "Nave spaziale", 2: "Incrociatore Galattico"}
 paths = list()
 esperienze = list()  # lista di oggetti
 
+# ... riempire groups da file, a manina, o come cazzo te pare
+# esempio
+groups = {1: "Nave spaziale", 2: "Incrociatore Galattico"}
 
 for file in os.listdir(os.getcwd()):
     if file.endswith(".csv") or file.endswith(".xlsx"):
