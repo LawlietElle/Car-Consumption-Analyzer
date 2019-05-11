@@ -37,10 +37,10 @@ esperienze = list()  # lista di oggetti
 
 # ... riempire groups da file, a manina, o come cazzo te pare
 # esempio
-groups = {1: "Nave spaziale", 2: "Incrociatore Galattico"}
+groups = {1: "Nave spaziale", 2: "Incrociatore Galattico", 3: "Nave da guerra"}
 
 for file in os.listdir(os.getcwd()):
-    if file.endswith(".csv") or file.endswith(".xlsx"):
+    if ".csv" in file or ".xlsx" in file:
         paths.append(os.getcwd() + "/" + file)
 
 if not paths:
@@ -48,9 +48,9 @@ if not paths:
 
 if __name__ == "__main__":
     for key, value in groups.items():
-        esperienze.append(Obd2Analyzer(paths[key - 1]))
+        esperienze.append(Obd2Analyzer(paths[key - 1], key, value))
 
     mergeSort(esperienze)
-    for ind in range(len(groups)):
-        print("gruppo : {}\tveicolo: {}\tconsumo: {} L/km".format(ind + 1, groups[ind + 1], esperienze[ind]))
-        esperienze[ind].plotConsumo()
+    print(*esperienze, sep="\n")
+    for i in range(len(esperienze)):
+        esperienze[i].plotConsumo()

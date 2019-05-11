@@ -7,18 +7,26 @@ import pandas as pd
 
 
 class Obd2Analyzer:
-    def __init__(self, csvfile):
+    def __init__(self, csvfile, num_gruppo, vehicle):
         self.csvfile = csvfile
         self.used_trip_distance = list()
         self.consumo_medio_ist = self.evaluateConsumoMedioIst()
+        self.num_gruppo = num_gruppo
+        self.vehicle = vehicle
 
     def __lt__(self, other) -> bool:
-        return self.consumo_medio_ist[-1] < other.consumo_medio_ist[-1]
+        return self.consumo_medio_ist[-1] > other.consumo_medio_ist[-1]
+
+    def __eq__(self, other) -> bool:
+        return self.consumo_medio_ist[-1] == other.consumo_medio_ist[-1]
 
     def __str__(self):
-        return str(self.consumo_medio_ist[-1])
+        return "gruppo: " + str(self.num_gruppo) + "\t\t"\
+               + "veicolo utilizzato: " + self.vehicle + "\t\t"\
+               + "consumo medio istantaneo: " + str(self.consumo_medio_ist[-1])
 
-    def getData(self, csvfile):
+    @staticmethod
+    def getData(csvfile):
         consumi_ist = list()
         trip_distance = list()
 
@@ -42,20 +50,8 @@ class Obd2Analyzer:
                     continue
         f.close()
 
-        consumi_ist = self.linearInterp(consumi_ist)
+        consumi_ist = linearInterp(consumi_ist)
         return consumi_ist, trip_distance
-
-    def linearInterp(self, my_list):
-        pulisciUpper(my_list)
-        pulisciLower(my_list)
-
-        y_iniz = np.array(my_list)
-        x = np.arange(len(y_iniz))
-        idx = np.nonzero(y_iniz)
-        interp = interp1d(x[idx], y_iniz[idx])
-        y_fixed = interp(x)
-
-        return y_fixed
 
     def evaluateConsumoMedioIst(self) -> list:
         consumi_ist, trip_distance = self.getData(self.csvfile)
@@ -80,6 +76,9 @@ class Obd2Analyzer:
         return self.consumo_medio_ist[-1]
 
     def plotConsumo(self):
+        plt.gcf().canvas.set_window_title(
+            "grafico consumo gruppo {} ({})".format(str(self.num_gruppo), self.vehicle)
+            )
         plt.plot(self.used_trip_distance, self.consumo_medio_ist)
         plt.xlabel("Spazio percorso[km]")
         plt.ylabel("Consumo medio istantaneo[L/km]")
@@ -88,7 +87,6 @@ class Obd2Analyzer:
 
 
 # funzioni fuori dalla classe
-
 def pulisciUpper(my_list):
     if my_list[0] == 0.0:
         my_list.remove(0)
@@ -101,10 +99,24 @@ def pulisciLower(my_list):
         pulisciLower(my_list)
 
 
+def linearInterp(my_list):
+    pulisciUpper(my_list)
+    pulisciLower(my_list)
+
+    y_iniz = np.array(my_list)
+    x = np.arange(len(y_iniz))
+    idx = np.nonzero(y_iniz)
+    interp = interp1d(x[idx], y_iniz[idx])
+    y_fixed = interp(x)
+
+    return y_fixed
+
+
 def xlsxltoCsv(excel_file):
     data_xls = pd.read_excel(excel_file, index_col=None)
-    data_xls.to_csv('csvfile.csv', encoding='utf-8', index=False)
-    return os.getcwd() + "/csvfile.csv"
+    data_xls.to_csv('converted_from_' + excel_file + '.csv',
+                    encoding='utf-8', index=False)
+    return os.getcwd() + "/converted_from_' + excel_file + '.csv'"
 
 
 def estrai_indici(my_list, element):
