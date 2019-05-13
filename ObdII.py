@@ -32,7 +32,7 @@ class Obd2Analyzer:
 
         # conservione eventuale excel in csv
         if ".xlsx" in csvfile:
-            csvfile = xlsxltoCsv(csvfile)
+            csvfile = xlsxlToCsv(csvfile)
 
         with open(csvfile, "r") as f:  # check esistenza file controllato prima
             reader = csv.reader(f)
@@ -112,7 +112,7 @@ def linearInterp(my_list):
     return y_fixed
 
 
-def xlsxltoCsv(excel_file):
+def xlsxlToCsv(excel_file):
     data_xls = pd.read_excel(excel_file, index_col=None)
     data_xls.to_csv('converted_from_' + excel_file + '.csv',
                     encoding='utf-8', index=False)
