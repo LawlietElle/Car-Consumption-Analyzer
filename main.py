@@ -12,39 +12,7 @@ def find_files(file_name):
     search_results = output.split()
 
     search_results.sort()
-    print(search_results)
-
     return search_results
-
-
-def mergeSort(my_list):
-    if len(my_list) > 1:
-        mid = len(my_list) // 2
-        lefthalf = my_list[:mid]
-        righthalf = my_list[mid:]
-
-        mergeSort(lefthalf)
-        mergeSort(righthalf)
-
-        i = j = k = 0
-        while i < len(lefthalf) and j < len(righthalf):
-            if lefthalf[i] < righthalf[j]:
-                my_list[k] = lefthalf[i]
-                i += 1
-            else:
-                my_list[k] = righthalf[j]
-                j += 1
-            k += 1
-
-        while i < len(lefthalf):
-            my_list[k] = lefthalf[i]
-            i += 1
-            k += 1
-
-        while j < len(righthalf):
-            my_list[k] = righthalf[j]
-            j += 1
-            k += 1
 
 
 esperienze = list()  # lista di oggetti
@@ -56,7 +24,7 @@ groups = {
     3: "Fiat 500L 2018 Benzina",  # 11 (noi)
     4: "Fiat Panda 2012 Benzina-GPL",  # 14 (Cosimo Bromo)
     5: "boh", # 15 (Dario(?))
-    6: "bohpt2"
+    6: "Subaru Legacy Station Wagon benzina/Gpl" # (Michele)
 }
 
 if not paths:
@@ -69,7 +37,7 @@ if __name__ == "__main__":
         except ValueError:
             esperienze.append(Obd2Analyzer2(paths[key - 1], key, value))
 
-    mergeSort(esperienze)
+    esperienze.sort()  # funziona grazie all'Overload degli operatori
     print(*esperienze, sep="\n")
     for i in range(len(esperienze)):
         esperienze[i].plotConsumo()
