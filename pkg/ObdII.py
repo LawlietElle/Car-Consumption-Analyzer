@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-class Obd2Analyzer:
+class Obd2Analyzer(object):
     def __init__(self, csvfile, num_gruppo, vehicle):
         self.csvfile = csvfile
         self.used_trip_distance = list()
@@ -21,49 +21,48 @@ class Obd2Analyzer:
         return self.consumo_medio_ist[-1] == other.consumo_medio_ist[-1]
 
     def __str__(self):
-        return "gruppo: " + str(self.num_gruppo) + "\t\t"\
-               + "veicolo utilizzato: " + self.vehicle + "\t\t"\
-               + "consumo medio istantaneo: " + str(self.consumo_medio_ist[-1])
+        return "gruppo: " + str(self.num_gruppo) + "\t\t" \
+               + "veicolo utilizzato: " + self.vehicle + "\t\t" \
+               + "consumo medio istantaneo: " + str(self.consumo_medio_ist[-1]) \
+               + "  km/L"
 
     @staticmethod
     def getData(csvfile):
-        consumi_ist = list()
-        trip_distance = list()
+        kpl = list()
+        trip_d = list()
 
-        # conservione eventuale excel in csv
-        if ".xlsx" in csvfile:
+        if ".xlsx" in csvfile:  # conservione eventuale excel in csv
             csvfile = xlsxlToCsv(csvfile)
 
         with open(csvfile, "r") as f:  # check esistenza file controllato prima
             reader = csv.reader(f)
             intestaz = next(reader)
+            r1 = indexOf(intestaz, "Trip Distance(km)")
+            r2 = indexOf(intestaz, "Kilometers Per Litre(Instant)(kpl)")
 
-            col_tripdistance = estrai_indici(intestaz, "Trip Distance(km)")
-            col_consumi = estrai_indici(intestaz, "Kilometers Per Litre(Instant)(kpl)")
+            try:
+                for riga in reader:
+                    trip_d.append(riga[r1])
+                    kpl.append(riga[r2])
 
-            for riga in reader:
-                try:
-                    if riga[col_tripdistance] != "-":
-                        consumi_ist.append(float(riga[col_consumi]))
-                        trip_distance.append(float(riga[col_tripdistance]))
-                except ValueError:   # handling di più intestazioni
-                    continue
-        f.close()
+                trip_d, kpl = list(zip(*[(s, kpl[i]) for i, s in enumerate(trip_d) if is_float(kpl[i], s)]))
+                trip_d, kpl = list(np.float_(trip_d)), list(np.float_(kpl))
+            except ValueError:
+                raise ValueError
+            finally:
+                f.close()
 
-        consumi_ist = linearInterp(consumi_ist)
-        return consumi_ist, trip_distance
+            return linearInterp(kpl), trip_d
 
     def evaluateConsumoMedioIst(self) -> list:
         consumi_ist, trip_distance = self.getData(self.csvfile)
         ripartizione = list()
-        litri_ist = list()
         consumo_medio_ist = list()
         sommatoria = 0
 
         for i in range(0, len(consumi_ist) - 2):
             litr = (trip_distance[i + 1] - trip_distance[i]) / consumi_ist[i]
             sommatoria += litr
-            litri_ist.append(litr)
             ripartizione.append(sommatoria)
 
             if ripartizione[i] != 0:
@@ -78,10 +77,10 @@ class Obd2Analyzer:
     def plotConsumo(self):
         plt.gcf().canvas.set_window_title(
             "grafico consumo gruppo {} ({})".format(str(self.num_gruppo), self.vehicle)
-            )
+        )
         plt.plot(self.used_trip_distance, self.consumo_medio_ist)
         plt.xlabel("Spazio percorso[km]")
-        plt.ylabel("Consumo medio istantaneo[L/km]")
+        plt.ylabel("Consumo medio istantaneo[km/L]")
         plt.grid()
         plt.show()
 
@@ -114,11 +113,21 @@ def linearInterp(my_list):
 
 def xlsxlToCsv(excel_file):
     data_xls = pd.read_excel(excel_file, index_col=None)
-    data_xls.to_csv('converted_from_' + excel_file + '.csv',
+    data_xls.to_csv('muori_celermente.csv',
                     encoding='utf-8', index=False)
-    return os.getcwd() + "/converted_from_' + excel_file + '.csv'"
+    return os.getcwd() + '/muori_celermente.csv'
 
 
-def estrai_indici(my_list, element):
+def indexOf(my_list, element):
     return my_list.index(element)
+
+
+def is_float(*arg):
+    try:
+        for i in arg:
+            float(i)
+        return True
+    except ValueError:
+        return False
+
 

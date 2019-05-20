@@ -1,4 +1,5 @@
 from ObdII import *
+from Obd_kind2 import *
 import subprocess
 
 
@@ -11,6 +12,7 @@ def find_files(file_name):
     search_results = output.split()
 
     search_results.sort()
+    print(search_results)
 
     return search_results
 
@@ -48,25 +50,27 @@ def mergeSort(my_list):
 esperienze = list()  # lista di oggetti
 paths = find_files("torqueTrackLog")
 groups = {
-    1: "Incrociatore Galattico",
-    2: "Fiat 500L 2018 Benzina",
-    3: "Fiat Panda 2012 Benzina-GPL"
+    1: "Volkswagen polo 2004",  # 1
+    2: "Lancia Phedra 2010",  # 2 (Cinghio(?))
+    # 3: "Renault Megane diesel", # 11 (Simone Peluffo)
+    3: "Fiat 500L 2018 Benzina",  # 11 (noi)
+    4: "Fiat Panda 2012 Benzina-GPL",  # 14 (Cosimo Bromo)
+    5: "boh", # 15 (Dario(?))
+    6: "bohpt2"
 }
-"""
-for file in os.listdir(os.getcwd()):
-    if ".csv" in file or ".xlsx" in file:
-        paths.append(os.getcwd() + "/" + file)
-"""
-
 
 if not paths:
-    raise FileNotFoundError
+    raise Exception("nessun file con quel nome sul computer")
 
 if __name__ == "__main__":
     for key, value in groups.items():
-        esperienze.append(Obd2Analyzer(paths[key - 1], key, value))
+        try:
+            esperienze.append(Obd2Analyzer(paths[key - 1], key, value))
+        except ValueError:
+            esperienze.append(Obd2Analyzer2(paths[key - 1], key, value))
 
     mergeSort(esperienze)
     print(*esperienze, sep="\n")
     for i in range(len(esperienze)):
         esperienze[i].plotConsumo()
+
