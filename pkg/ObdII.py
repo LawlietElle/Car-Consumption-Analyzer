@@ -1,9 +1,6 @@
-import os
 import csv
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d
-import numpy as np
-import pandas as pd
+from pkg.library import *
 
 
 class Obd2Analyzer(object):
@@ -38,19 +35,27 @@ class Obd2Analyzer(object):
             reader = csv.reader(f)
             intestaz = next(reader)
             r1 = indexOf(intestaz, "Trip Distance(km)")
-            r2 = indexOf(intestaz, "Kilometers Per Litre(Instant)(kpl)")
 
             try:
-                for riga in reader:
-                    trip_d.append(riga[r1])
-                    kpl.append(riga[r2])
-
-                trip_d, kpl = list(zip(*[(s, kpl[i]) for i, s in enumerate(trip_d) if is_float(kpl[i], s)]))
-                trip_d, kpl = list(np.float_(trip_d)), list(np.float_(kpl))
+                r2 = indexOf(intestaz, "Kilometers Per Litre(Instant)(kpl)")
+                exp = 1
+                rescaling_factor = 1
             except ValueError:
-                raise ValueError
-            finally:
-                f.close()
+                r2 = indexOf(intestaz, "Litres Per 100 Kilometer(Instant)(l/100km)")
+                exp = -1
+                rescaling_factor = 100
+
+            for riga in reader:
+                trip_d.append(riga[r1])
+                kpl.append(riga[r2])
+
+            trip_d, kpl = list(zip(*[(s, kpl[i]) for i, s in enumerate(trip_d) if is_float(kpl[i], s)]))
+            trip_d, kpl = [float(td) for td in trip_d],  [float(k)**exp*rescaling_factor for k in kpl]
+
+            if trip_d[0] > 0.5:
+                shift_and_allign(trip_d)
+
+            f.close()
 
             return linearInterp(kpl), trip_d
 
@@ -83,51 +88,4 @@ class Obd2Analyzer(object):
         plt.ylabel("Consumo medio istantaneo[km/L]")
         plt.grid()
         plt.show()
-
-
-# funzioni fuori dalla classe
-def pulisciUpper(my_list):
-    if my_list[0] == 0.0:
-        my_list.remove(0)
-        pulisciUpper(my_list)
-
-
-def pulisciLower(my_list):
-    if my_list[len(my_list) - 1] == 0.0:
-        del my_list[-1]
-        pulisciLower(my_list)
-
-
-def linearInterp(my_list):
-    pulisciUpper(my_list)
-    pulisciLower(my_list)
-
-    y_iniz = np.array(my_list)
-    x = np.arange(len(y_iniz))
-    idx = np.nonzero(y_iniz)
-    interp = interp1d(x[idx], y_iniz[idx])
-    y_fixed = interp(x)
-
-    return y_fixed
-
-
-def xlsxlToCsv(excel_file):
-    data_xls = pd.read_excel(excel_file, index_col=None)
-    data_xls.to_csv('muori_celermente.csv',
-                    encoding='utf-8', index=False)
-    return os.getcwd() + '/muori_celermente.csv'
-
-
-def indexOf(my_list, element):
-    return my_list.index(element)
-
-
-def is_float(*arg):
-    try:
-        for i in arg:
-            float(i)
-        return True
-    except ValueError:
-        return False
-
 
